@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quel niveau de Super Maman es-tu ?</title>
+  <!-- On importe une police moderne pour un look stylé -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    /* RESET & BASE */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(135deg, #fbc2eb, #a18cd1);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Le conteneur principal, avec un léger fond blanc translucide pour accentuer le contraste */
+    #container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      padding: 20px;
+    }
+    section {
+      padding: 30px;
+    }
+    .hidden {
+      display: none;
+    }
+    .center {
+      text-align: center;
+    }
+    h1 {
+      font-size: 2.8em;
+      margin-bottom: 0.5em;
+      color: #6a1b9a;
+    }
+    h2 {
+      margin-bottom: 20px;
+      color: #4a148c;
+    }
+    p {
+      font-size: 1.3em;
+      margin-bottom: 20px;
+    }
+    button {
+      cursor: pointer;
+      background: #6a1b9a;
+      border: none;
+      color: #fff;
+      padding: 15px 30px;
+      font-size: 1em;
+      border-radius: 50px;
+      transition: background 0.3s, transform 0.3s;
+    }
+    button:hover {
+      background: #4a148c;
+      transform: scale(1.05);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    /* Options visibles en mode "boutons" pour un choix simple */
+    .option-button {
+      width: 100%;
+      margin: 12px 0;
+      padding: 15px;
+      text-align: center;
+      border: 3px solid #6a1b9a;
+      border-radius: 20px;
+      background: rgba(106,27,154,0.1);
+      transition: background 0.3s, transform 0.3s;
+      font-size: 1.2em;
+    }
+    .option-button:hover {
+      background: #6a1b9a;
+      color: #fff;
+      transform: scale(1.03);
+    }
+    .option-button.correct {
+      background: #4CAF50 !important;
+      border-color: #388E3C !important;
+      color: #fff;
+    }
+    .option-button.incorrect {
+      background: #F44336 !important;
+      border-color: #D32F2F !important;
+      color: #fff;
+    }
+    /* Pour les questions à choix multiple, on utilise des labels en "card" */
+    label {
+      display: block;
+      margin: 12px 0;
+      padding: 15px;
+      border: 3px solid #6a1b9a;
+      border-radius: 20px;
+      background: rgba(106,27,154,0.1);
+      transition: background 0.3s, transform 0.3s;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+    label:hover {
+      background: #6a1b9a;
+      color: #fff;
+      transform: scale(1.02);
+    }
+    label.correct {
+      background: #4CAF50 !important;
+      border-color: #388E3C !important;
+      color: #fff;
+    }
+    label.incorrect {
+      background: #F44336 !important;
+      border-color: #D32F2F !important;
+      color: #fff;
+    }
+    /* Barre de progression clairement visible */
+    .progress-container {
+      background: #ddd;
+      border-radius: 20px;
+      overflow: hidden;
+      margin-bottom: 25px;
+      height: 25px;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #8e24aa, #d81b60);
+      transition: width 0.5s;
+    }
+    /* Animations classiques de fade-in/fade-out */
+    .fade-in {
+      animation: fadeIn 0.6s ease-in forwards;
+    }
+    .fade-out {
+      animation: fadeOut 0.6s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-20px); }
+    }
+    .feedback {
+      font-size: 1.4em;
+      font-weight: 600;
+      margin-top: 20px;
+    }
+    /* Le mascot qui vient nous parler, positionné en bas et animé grâce à transform.
+       J'ai décalé verticalement le message pour l'améliorer visuellement. */
+    #mascot {
+      position: absolute;
+      bottom: 40px; /* légèrement remonté */
+      left: 50%;
+      transform: translate(-50%, 20px) scale(0); /* décalé initialement de 20px sur l'axe Y */
+      background: linear-gradient(135deg, #ffe0b2, #ffcc80);
+      padding: 15px 25px;
+      border-radius: 20px;
+      border: 3px solid #ff9800;
+      font-size: 1.2em;
+      color: #e65100;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      transition: transform 0.5s ease-out;
+      z-index: 10;
+    }
+    #mascot.show {
+      transform: translate(-50%, 0) scale(1); /* apparaît au bon endroit */
+    }
+    /* Conteneur de confettis pour animer les bonnes réponses */
+    #confettiContainer {
+      pointer-events: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      z-index: 20;
+    }
+    .confetti {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: red;
+      opacity: 0.9;
+      animation: confettiFall 2s linear forwards;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+    /* Indications visuelles pour le focus (accessibilité) */
+    button:focus, .option-button:focus, label:focus {
+      outline: 2px solid #d81b60;
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <!-- Écran d'accueil -->
+    <section id="welcomeScreen" class="center fade-in">
+      <h1>Quel niveau de Super Maman es-tu ?</h1>
+      <p>Aujourd’hui, tu passes le test ultime… Es-tu prête à prouver que tu es la meilleure maman du monde ? Spoiler : on le sait déjà 😉 Mais joue le jeu, une surprise t’attend à la fin !</p>
+      <button id="startBtn">Commencer le quiz 🧠</button>
+    </section>
+
+    <!-- Écran du Quiz -->
+    <section id="quizScreen" class="hidden">
+      <div class="progress-container" aria-label="Barre de progression">
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0"></div>
+      </div>
+      <div id="quizContent"></div>
+    </section>
+
+    <!-- Écran de résultat -->
+    <section id="resultScreen" class="center hidden fade-in">
+      <h1>Résultat : Maman niveau LÉGENDAIRE 💎</h1>
+      <p>Félicitations ! Tu es officiellement la meilleure maman de l'univers.</p>
+      <p>Et pour fêter ça... ton cadeau t'attend : Va regarder dans un des tirroirs du salon (ou armoire)</p>
+    </section>
+
+    <!-- Mascot qui vient parler et dynamiser le jeu -->
+    <div id="mascot" class="hidden"></div>
+
+    <!-- Conteneur des confettis -->
+    <div id="confettiContainer" class="hidden"></div>
+  </div>
+
+  <script>
+    // Définition du quiz
+    const questions = [
+      {
+        question: "Quel est mon réseaux social préféré ?",
+        options: [
+          { text: "Instagram", correct: false },
+          { text: "Snapchat", correct: false },
+          { text: "Youtube", correct: true },
+          { text: "Tiktok", correct: false }
+        ]
+      },
+      {
+        question: "Quel est ma boisson préféré ?",
+        options: [
+          { text: "Thé", correct: false },
+          { text: "Café", correct: true },
+          { text: "Matcha", correct: false },
+          { text: "Swheppes Tonic", correct: false }
+        ]
+      },
+      {
+        question: "Quel est mon activité préféré ?",
+        options: [
+          { text: "Jouer au jeu vidéo", correct: true },
+          { text: "Dormir", correct: false },
+          { text: "Lire", correct: false },
+          { text: "Regarder des films", correct: false }
+        ]
+      },
+      {
+        question: "Quel genre de film je préfère ?",
+        options: [
+          { text: "Horreur", correct: false },
+          { text: "Action", correct: true },
+          { text: "Romance", correct: false },
+          { text: "Comédie", correct: false }
+        ]
+      },
+      {
+        question: "Quel parfum de glace je préfère ? (Plusieurs réponses possibles)",
+        options: [
+          { text: "Vanille", correct: true },
+          { text: "Fraise", correct: false },
+          { text: "Chocolat", correct: false },
+          { text: "Oréo", correct: false },
+          { text: "Pistache", correct: true },
+          { text: "Framboise", correct: false },
+          { text: "Cookie", correct: true },
+          { text: "Tous", correct: false }
+        ],
+        multiSelect: true
+      },
+      {
+        question: "Quel est ma couleur préféré ?",
+        options: [
+          { text: "Vert", correct: true },
+          { text: "Rouge", correct: false },
+          { text: "Bleu", correct: false },
+          { text: "Jaune", correct: false },
+          { text: "Rose", correct: false },
+          { text: "Orange", correct: false },
+          { text: "Violet", correct: false },
+          { text: "Noir", correct: false }
+        ]
+      },
+      {
+        question: "Quel est ma voiture de rêve ?",
+        options: [
+          { text: "Ferrari", correct: false },
+          { text: "Lamborghini", correct: false },
+          { text: "Bugatti", correct: true },
+          { text: "Koenigsegg", correct: false },
+          { text: "Rolls Royce", correct: false },
+          { text: "Mercedes", correct: false }
+        ]
+      },
+      {
+        question: "Si je pouvais voyager n'importe où, où irais-je ? (Plusieurs réponses possibles)",
+        options: [
+          { text: "Aux Maldives", correct: false },
+          { text: "Bahamas", correct: true },
+          { text: "Hawaï", correct: false },
+          { text: "Canada", correct: true },
+          { text: "Etats Unis", correct: false }
+        ],
+        multiSelect: true
+      },
+      {
+        question: "Si je dois vivre qu'avec un aliment toute ma vie, c'est quoi ?",
+        options: [
+          { text: "Salade iceberg", correct: false },
+          { text: "Carotte", correct: false },
+          { text: "Oeuf", correct: true },
+          { text: "Oignon", correct: false },
+          { text: "Tomate", correct: false }
+        ]
+      },
+      {
+        question: "Mes célébrités préféré ?",
+        options: [
+          { text: "Maman", correct: true },
+          { text: "Ronaldo", correct: false },
+          { text: "Squeezie", correct: false },
+          { text: "Booba", correct: false },
+          { text: "Omar Sy", correct: false }
+        ]
+      }
+    ];
+
+    const totalQuestions = questions.length;
+    let currentQuestionIndex = 0;
+    const userAnswers = [];
+
+    // Récupération des éléments du DOM
+    const welcomeScreen = document.getElementById("welcomeScreen");
+    const quizScreen = document.getElementById("quizScreen");
+    const resultScreen = document.getElementById("resultScreen");
+    const quizContent = document.getElementById("quizContent");
+    const progressBar = document.querySelector(".progress-bar");
+    const startBtn = document.getElementById("startBtn");
+    const mascot = document.getElementById("mascot");
+    const confettiContainer = document.getElementById("confettiContainer");
+
+    startBtn.addEventListener("click", startQuiz);
+
+    function startQuiz() {
+      welcomeScreen.classList.add("fade-out");
+      setTimeout(() => {
+        welcomeScreen.classList.add("hidden");
+        quizScreen.classList.remove("hidden");
+        showQuestion();
+      }, 600);
+    }
+
+    function showQuestion() {
+      quizContent.innerHTML = "";
+      const q = questions[currentQuestionIndex];
+      const questionDiv = document.createElement("div");
+      questionDiv.classList.add("fade-in");
+
+      const questionTitle = document.createElement("h2");
+      questionTitle.textContent = q.question;
+      questionDiv.appendChild(questionTitle);
+
+      const answersContainer = document.createElement("div");
+      // Zone de feedback pour afficher "Bonne réponse" / "Mauvaise réponse"
+      const feedbackDiv = document.createElement("div");
+      feedbackDiv.className = "feedback";
+
+      if (q.multiSelect) {
+        // Pour les questions à choix multiples
+        q.options.forEach((option, index) => {
+          const label = document.createElement("label");
+          label.setAttribute("data-index", index);
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = index;
+          checkbox.style.marginRight = "10px";
+          label.appendChild(checkbox);
+          label.appendChild(document.createTextNode(option.text));
+          answersContainer.appendChild(label);
+        });
+        const validateBtn = document.createElement("button");
+        validateBtn.textContent = "Valider";
+        validateBtn.addEventListener("click", () => {
+          const selectedInputs = answersContainer.querySelectorAll("input[type='checkbox']");
+          let selected = [];
+          selectedInputs.forEach(input => {
+            if(input.checked) selected.push(parseInt(input.value));
+          });
+          selected.sort((a, b) => a - b);
+          let correctIndices = [];
+          q.options.forEach((option, index) => {
+            if(option.correct) correctIndices.push(index);
+          });
+          correctIndices.sort((a, b) => a - b);
+          let isCorrect = JSON.stringify(selected) === JSON.stringify(correctIndices);
+          selectedInputs.forEach(input => input.disabled = true);
+          validateBtn.disabled = true;
+          const labels = answersContainer.querySelectorAll("label");
+          labels.forEach(label => {
+            let idx = parseInt(label.getAttribute("data-index"));
+            const input = label.querySelector("input");
+            if(q.options[idx].correct) {
+              label.classList.add("correct");
+            } else if(input.checked && !q.options[idx].correct) {
+              label.classList.add("incorrect");
+            }
+          });
+          if(isCorrect) launchConfetti();
+          showFeedback(feedbackDiv, isCorrect);
+          setTimeout(() => {
+            showMascot(getMascotMessage(isCorrect), nextQuestion);
+          }, 1500);
+        });
+        answersContainer.appendChild(validateBtn);
+      } else {
+        // Pour les questions à choix unique
+        q.options.forEach((option, index) => {
+          const btn = document.createElement("button");
+          btn.textContent = option.text;
+          btn.classList.add("option-button");
+          btn.setAttribute("data-index", index);
+          btn.addEventListener("click", function() {
+            const allButtons = answersContainer.querySelectorAll("button.option-button");
+            allButtons.forEach(b => b.disabled = true);
+            let isCorrect = option.correct;
+            if(isCorrect) {
+              btn.classList.add("correct");
+              launchConfetti();
+              showFeedback(feedbackDiv, true);
+            } else {
+              btn.classList.add("incorrect");
+              allButtons.forEach(b => {
+                const idx = parseInt(b.getAttribute("data-index"));
+                if(q.options[idx].correct) {
+                  b.classList.add("correct");
+                }
+              });
+              showFeedback(feedbackDiv, false);
+            }
+            setTimeout(() => {
+              showMascot(getMascotMessage(isCorrect), nextQuestion);
+            }, 1500);
+          });
+          answersContainer.appendChild(btn);
+        });
+      }
+
+      questionDiv.appendChild(answersContainer);
+      questionDiv.appendChild(feedbackDiv);
+      quizContent.appendChild(questionDiv);
+      updateProgress();
+    }
+
+    function showFeedback(feedbackElement, isCorrect) {
+      feedbackElement.textContent = isCorrect ? "Bonne réponse !" : "Mauvaise réponse.";
+      feedbackElement.style.color = isCorrect ? "#4CAF50" : "#F44336";
+    }
+
+    function updateProgress() {
+      const progress = (currentQuestionIndex / totalQuestions) * 100;
+      progressBar.style.width = progress + "%";
+      progressBar.setAttribute("aria-valuenow", currentQuestionIndex);
+      if (currentQuestionIndex === totalQuestions) {
+        progressBar.style.width = "100%";
+        progressBar.setAttribute("aria-valuenow", totalQuestions);
+      }
+    }
+
+    // Lancement d'une animation de confettis lors d'une bonne réponse
+    function launchConfetti() {
+      confettiContainer.innerHTML = "";
+      confettiContainer.classList.remove("hidden");
+      let confettiCount = 30;
+      for(let i = 0; i < confettiCount; i++) {
+        let confetti = document.createElement("div");
+        confetti.classList.add("confetti");
+        // Couleur aléatoire parmi une sélection
+        const colors = ["#FFEB3B", "#FFC107", "#FF9800", "#FF5722", "#F44336"];
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        // Position horizontale aléatoire
+        confetti.style.left = Math.random() * 100 + "%";
+        confetti.style.top = "-10px";
+        // Durée et retard aléatoires
+        confetti.style.animationDuration = (1.5 + Math.random()) + "s";
+        confetti.style.animationDelay = Math.random() + "s";
+        confettiContainer.appendChild(confetti);
+      }
+      // Nettoyage après l'animation
+      setTimeout(() => {
+        confettiContainer.classList.add("hidden");
+        confettiContainer.innerHTML = "";
+      }, 3000);
+    }
+
+    // Fonction qui affiche le mascot avec un message motivant
+    function showMascot(message, callback) {
+      mascot.textContent = message;
+      mascot.classList.remove("hidden");
+      // Apparition du mascot
+      setTimeout(() => { mascot.classList.add("show"); }, 50);
+      // Le mascot reste visible pendant 1.5 secondes, puis disparaît
+      setTimeout(() => {
+        mascot.classList.remove("show");
+        setTimeout(() => {
+          mascot.classList.add("hidden");
+          if(callback) callback();
+        }, 500);
+      }, 1500);
+    }
+
+    // Renvoie un message épique en fonction de la réponse
+    function getMascotMessage(isCorrect) {
+      const messagesCorrect = [
+        "Wow, pas mal pour un mortel",
+        "Stylé Stylé",
+        "Bsahtek mama",
+        "Wesh, t'es trop forte !"
+      ];
+      const messagesIncorrect = [
+        "Raté sur ce coup-là",
+        "Courage, la prochaine sera la bonne !",
+        "Reprends ton souffle et continue",
+        "Pas grave tkt"
+      ];
+      return isCorrect ? messagesCorrect[Math.floor(Math.random() * messagesCorrect.length)]
+                       : messagesIncorrect[Math.floor(Math.random() * messagesIncorrect.length)];
+    }
+
+    function nextQuestion() {
+      const currentDiv = quizContent.firstChild;
+      currentDiv.classList.remove("fade-in");
+      currentDiv.classList.add("fade-out");
+      setTimeout(() => {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < totalQuestions) {
+          showQuestion();
+        } else {
+          quizScreen.classList.add("fade-out");
+          setTimeout(() => {
+            quizScreen.classList.add("hidden");
+            resultScreen.classList.remove("hidden");
+          }, 600);
+        }
+      }, 600);
+    }
+  </script>
+</body>
+</html>
